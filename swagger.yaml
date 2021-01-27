@@ -1,0 +1,88 @@
+swagger: "2.0"
+info:
+  description: "zipcode api for aura"
+  version: "1.0.0"
+  title: "Zipcodes"
+  contact:
+    email: "keith.olenchak@gmail.com"
+host: "aura.api"
+basePath: "/"
+tags:
+- name: "zipcode"
+  description: "Get and Create Zipcodes"
+schemes:
+- "https"
+- "http"
+paths:
+  /zipcodes:
+    get:
+      tags:
+        - zipcode
+      description: "Get an array of zipcodes via a variety of filters"
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: "Successful operation"
+          schema:
+            $ref: '#/definitions/Zipcodes'
+        '500':
+          description: "Error executing request"
+          schema:
+            $ref: '#/definitions/Error'
+  /zipcode:
+    post:
+      tags:
+        - zipcode
+      description: "Add a zipcode to the database"
+      produces:
+        - application/json
+      responses:
+        '500':
+          description: "Error executing request"
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Zipcode:
+    type: "object"
+    properties:
+      zip:
+        type: "string"
+      type:
+        type: "string"
+      primary_city:
+        type: "string"
+      acceptable_cities:
+        type: "string"
+      unacceptable_cities:
+        type: "string"
+      state:
+        type: "string"
+      county:
+        type: "string"
+      timezone:
+        type: "string"
+      area_codes:
+        type: "string"
+      latidute:
+        type: "string"
+      longitude:
+        type: "string"
+      country:
+        type: "string"
+      estimated_population:
+        type: "string"
+  Zipcodes:
+    type: "array"
+    description: "A collection of zipcode objects"
+    items:
+        $ref: '#/definitions/Zipcode'
+  Error:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      message:
+        type: "string"
+        description: "Error message/details"
