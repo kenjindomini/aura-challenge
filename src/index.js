@@ -45,7 +45,7 @@ async function zipcodesHandler(
 ) {
   switch (method) {
     case "GET": {
-      return await getZipcodes(queryString);
+      return getZipcodes(queryString);
     }
     default: {
       throw new Error(`Unsupported HTTP Method: ${method}`);
@@ -73,10 +73,13 @@ async function zipcodeHandler(
   }
 }
 
-async function getZipcodes(queryString) {
-  //
-}
-
-function filterZipcodesByZipcode(zipcode) {
-  //
+function getZipcodes(queryString) {
+  let zipcodes = db;
+  if (queryString.hasOwnProperty("type")) {
+    zipcodes = zipcodes.filter(z => z.type === queryString.type);
+  }
+  if (queryString.hasOwnProperty("zipcode")) {
+    zipcodes = zipcodes.filter(z => z.zip.match(`.*${queryString.zipcode}.*`));
+  }
+  return zipcodes;
 }

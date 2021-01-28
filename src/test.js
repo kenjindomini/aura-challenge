@@ -58,6 +58,128 @@ describe("/zipcodes tests", () => {
     let response = await handler(event);
     expect(Array.isArray(response)).toEqual(true);
   });
+  test("A complete zipcode returns a single result in an array", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        zipcode: "04091"
+      }
+    };
+    let expectResult = [
+      {
+        zip: "04091",
+        type: "STANDARD",
+        primary_city: "West Baldwin",
+        acceptable_cities: null,
+        unacceptable_cities: null,
+        state: "ME",
+        county: "Cumberland County",
+        timezone: "America/New_York",
+        area_codes: "207",
+        latitude: "43.83",
+        longitude: "-70.77",
+        country: "US",
+        estimated_population: "746"
+      }
+    ];
+    expect.assertions(1);
+    let response = await handler(event);
+    expect(response).toEqual(expectResult);
+  });
+  test("A partial zipcode returns all matches", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        zipcode: 701
+      }
+    };
+    let expectResult = [
+      {
+        zip: "01701",
+        type: "STANDARD",
+        primary_city: "Framingham",
+        acceptable_cities: null,
+        unacceptable_cities: "Framingham Center, Framingham So, Saxonville",
+        state: "MA",
+        county: "Middlesex County",
+        timezone: "America/New_York",
+        area_codes: "508,617,774,781,978",
+        latitude: "42.3",
+        longitude: "-71.43",
+        country: "US",
+        estimated_population: "27821"
+      },
+      {
+        zip: "05701",
+        type: "STANDARD",
+        primary_city: "Rutland",
+        acceptable_cities: "Mendon, S Chittenden, South Chittenden",
+        unacceptable_cities:
+          "Clementwood, East Pittsford, Glen, Heartwell, Mill Village, Rutland Town",
+        state: "VT",
+        county: "Rutland County",
+        timezone: "America/New_York",
+        area_codes: "802",
+        latitude: "43.6",
+        longitude: "-72.97",
+        country: "US",
+        estimated_population: "16970"
+      },
+      {
+        zip: "06701",
+        type: "UNIQUE",
+        primary_city: "Waterbury",
+        acceptable_cities: null,
+        unacceptable_cities: "U S Postal Service, Wtby",
+        state: "CT",
+        county: "New Haven County",
+        timezone: "America/New_York",
+        area_codes: "203",
+        latitude: "41.55",
+        longitude: "-73.03",
+        country: "US",
+        estimated_population: "0"
+      }
+    ];
+    expect.assertions(1);
+    let response = await handler(event);
+    expect(response).toEqual(expectResult);
+  });
+  test("A partial zipcode + a type filter returns the expected subset", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        zipcode: 701,
+        type: "UNIQUE"
+      }
+    };
+    let expectResult = [
+      {
+        zip: "06701",
+        type: "UNIQUE",
+        primary_city: "Waterbury",
+        acceptable_cities: null,
+        unacceptable_cities: "U S Postal Service, Wtby",
+        state: "CT",
+        county: "New Haven County",
+        timezone: "America/New_York",
+        area_codes: "203",
+        latitude: "41.55",
+        longitude: "-73.03",
+        country: "US",
+        estimated_population: "0"
+      }
+    ];
+    expect.assertions(1);
+    let response = await handler(event);
+    expect(response).toEqual(expectResult);
+  });
 });
 
 describe("/zipcode tests", () => {

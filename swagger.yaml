@@ -18,7 +18,13 @@ paths:
     get:
       tags:
         - zipcode
-      description: "Get an array of zipcodes via a variety of filters"
+      description: "Get an array of zipcodes via a variety of filters, filters are applied in the order of: Type, zipcode, city, Latitude&Longitude"
+      parameters:
+        - $ref: "#/parameters/zipcodeParam"
+        - $ref: "#/parameters/cityParam"
+        - $ref: "#/parameters/latitudeParam"
+        - $ref: "#/parameters/longitudeParam"
+        - $ref: "#/parameters/typeParam"
       produces:
         - application/json
       responses:
@@ -101,3 +107,33 @@ definitions:
       message:
         type: "string"
         description: "Error message/details"
+parameters:
+  zipcodeParam:
+    name: zipcode
+    in: query
+    type: string
+    description: complete or partial zipcode to lookup
+  cityParam:
+    name: city
+    in: query
+    type: string
+    description: complete or partial city name to filter zipcodes on
+  latitudeParam:
+    name: latitude
+    in: query
+    type: number
+    description: will fiter zipcodes to the single closest latitude and longitude
+  longitudeParam:
+    name: longitude
+    in: query
+    type: number
+    description: will fiter zipcodes to the single closest latitude and longitude
+  typeParam:
+    name: type
+    in: query
+    type: string
+    enum:
+      - 'STANDARD'
+      - 'PO BOX'
+      - 'UNIQUE'
+    description: zipcode type to filter on
