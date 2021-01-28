@@ -31,6 +31,21 @@ paths:
           schema:
             $ref: '#/definitions/Error'
   /zipcode:
+    get:
+      tags:
+        - zipcode
+      description: "Get the specified zipcode details"
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: "Successful operation"
+          schema:
+            $ref: '#/definitions/Zipcode'
+        '500':
+          description: "Error executing request"
+          schema:
+            $ref: '#/definitions/Error'
     post:
       tags:
         - zipcode

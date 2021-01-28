@@ -1,18 +1,31 @@
+let db = require("./data");
+
 // lambda-like handler function
 module.exports.handler = async event => {
-  switch (event.path) {
-    case "/zipcodes": {
+  let re = new RegExp("(\\w+)/?(.*)");
+  let resource, resourceArguments;
+  try {
+    let matches = event.path.match(re);
+    resource = matches[1];
+    resourceArguments = matches[2];
+  } catch (e) {
+    throw new Error("Malformed request");
+  }
+  switch (resource) {
+    case "zipcodes": {
       return await zipcodesHandler(
         event.httpMethod,
         event.headers,
+        resourceArguments,
         event.queryStringParameters,
         event.body
       );
     }
-    case "/zipcode": {
+    case "zipcode": {
       return await zipcodeHandler(
         event.httpMethod,
         event.headers,
+        resourceArguments,
         event.queryStringParameters,
         event.body
       );
@@ -23,10 +36,16 @@ module.exports.handler = async event => {
   }
 };
 
-async function zipcodesHandler(method, headers, queryString, body) {
+async function zipcodesHandler(
+  method,
+  headers,
+  resourceArguments,
+  queryString,
+  body
+) {
   switch (method) {
     case "GET": {
-      break;
+      return await getZipcodes(queryString);
     }
     default: {
       throw new Error(`Unsupported HTTP Method: ${method}`);
@@ -34,13 +53,30 @@ async function zipcodesHandler(method, headers, queryString, body) {
   }
 }
 
-async function zipcodeHandler(method, headers, queryString, body) {
+async function zipcodeHandler(
+  method,
+  headers,
+  resourceArguments,
+  queryString,
+  body
+) {
   switch (method) {
+    case "GET": {
+      throw new Error(`GET /zipcode not implemented`);
+    }
     case "POST": {
-      break;
+      throw new Error(`POST /zipcode not implemented`);
     }
     default: {
       throw new Error(`Unsupported HTTP Method: ${method}`);
     }
   }
+}
+
+async function getZipcodes(queryString) {
+  //
+}
+
+function filterZipcodesByZipcode(zipcode) {
+  //
 }
