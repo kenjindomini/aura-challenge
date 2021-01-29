@@ -1,0 +1,112 @@
+swagger: "2.0"
+info:
+  description: "zipcode api for aura"
+  version: "1.0.0"
+  title: "Zipcodes"
+  contact:
+    email: "keith.olenchak@gmail.com"
+host: "aura.api"
+basePath: "/"
+tags:
+- name: "zipcode"
+  description: "Get and Create Zipcodes"
+schemes:
+- "https"
+- "http"
+paths:
+  /zipcodes:
+    get:
+      tags:
+        - zipcode
+      description: "Get an array of zipcodes via a variety of filters, filters are applied in the order of: Latitude&Longitude, Type, zipcode, city. If latitude and longitude are provided no other filter is applied and only 1 result will be returned"
+      parameters:
+        - $ref: "#/parameters/zipcodeParam"
+        - $ref: "#/parameters/cityParam"
+        - $ref: "#/parameters/latitudeParam"
+        - $ref: "#/parameters/longitudeParam"
+        - $ref: "#/parameters/typeParam"
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: "Successful operation"
+          schema:
+            $ref: '#/definitions/Zipcodes'
+        '500':
+          description: "Error executing request"
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Zipcode:
+    type: "object"
+    properties:
+      zip:
+        type: "string"
+      type:
+        type: "string"
+      primary_city:
+        type: "string"
+      acceptable_cities:
+        type: "string"
+      unacceptable_cities:
+        type: "string"
+      state:
+        type: "string"
+      county:
+        type: "string"
+      timezone:
+        type: "string"
+      area_codes:
+        type: "string"
+      latidute:
+        type: "string"
+      longitude:
+        type: "string"
+      country:
+        type: "string"
+      estimated_population:
+        type: "string"
+  Zipcodes:
+    type: "array"
+    description: "A collection of zipcode objects"
+    items:
+        $ref: '#/definitions/Zipcode'
+  Error:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      message:
+        type: "string"
+        description: "Error message/details"
+parameters:
+  zipcodeParam:
+    name: zipcode
+    in: query
+    type: string
+    description: complete or partial zipcode to lookup
+  cityParam:
+    name: city
+    in: query
+    type: string
+    description: complete or partial city name to filter zipcodes on
+  latitudeParam:
+    name: latitude
+    in: query
+    type: number
+    description: will fiter zipcodes to the single closest latitude and longitude
+  longitudeParam:
+    name: longitude
+    in: query
+    type: number
+    description: will fiter zipcodes to the single closest latitude and longitude
+  typeParam:
+    name: type
+    in: query
+    type: string
+    enum:
+      - 'STANDARD'
+      - 'PO BOX'
+      - 'UNIQUE'
+    description: zipcode type to filter on
