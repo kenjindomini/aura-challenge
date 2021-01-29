@@ -18,7 +18,7 @@ paths:
     get:
       tags:
         - zipcode
-      description: "Get an array of zipcodes via a variety of filters, filters are applied in the order of: Type, zipcode, city, Latitude&Longitude"
+      description: "Get an array of zipcodes via a variety of filters, filters are applied in the order of: Latitude&Longitude, Type, zipcode, city. If latitude and longitude are provided no other filter is applied and only 1 result will be returned"
       parameters:
         - $ref: "#/parameters/zipcodeParam"
         - $ref: "#/parameters/cityParam"
@@ -32,33 +32,6 @@ paths:
           description: "Successful operation"
           schema:
             $ref: '#/definitions/Zipcodes'
-        '500':
-          description: "Error executing request"
-          schema:
-            $ref: '#/definitions/Error'
-  /zipcode:
-    get:
-      tags:
-        - zipcode
-      description: "Get the specified zipcode details"
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: "Successful operation"
-          schema:
-            $ref: '#/definitions/Zipcode'
-        '500':
-          description: "Error executing request"
-          schema:
-            $ref: '#/definitions/Error'
-    post:
-      tags:
-        - zipcode
-      description: "Add a zipcode to the database"
-      produces:
-        - application/json
-      responses:
         '500':
           description: "Error executing request"
           schema:

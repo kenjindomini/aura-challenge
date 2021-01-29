@@ -1,3 +1,4 @@
+import { describe, expect, test } from "@jest/globals";
 const { handler } = require("./index");
 
 describe("basic tests", () => {
@@ -180,21 +181,126 @@ describe("/zipcodes tests", () => {
     let response = await handler(event);
     expect(response).toEqual(expectResult);
   });
-});
-
-describe("/zipcode tests", () => {
-  test("Unsupported method throws an error", async () => {
+  test("A partial city returns the expected results", async () => {
     let event = {
-      httpMethod: "PATCH",
-      path: "/zipcode",
+      httpMethod: "GET",
+      path: "/zipcodes",
       headers: {},
       queryStringParameters: {
-        date: "2020-11-13"
+        city: "ashla"
       }
     };
+    let expectResult = [
+      {
+        zip: "01721",
+        type: "STANDARD",
+        primary_city: "Ashland",
+        acceptable_cities: null,
+        unacceptable_cities: null,
+        state: "MA",
+        county: "Middlesex County",
+        timezone: "America/New_York",
+        area_codes: "508,617",
+        latitude: "42.25",
+        longitude: "-71.46",
+        country: "US",
+        estimated_population: "14769"
+      },
+      {
+        zip: "03217",
+        type: "STANDARD",
+        primary_city: "Ashland",
+        acceptable_cities: null,
+        unacceptable_cities: null,
+        state: "NH",
+        county: "Grafton County",
+        timezone: "America/New_York",
+        area_codes: "603",
+        latitude: "43.69",
+        longitude: "-71.63",
+        country: "US",
+        estimated_population: "1929"
+      },
+      {
+        zip: "04732",
+        type: "STANDARD",
+        primary_city: "Ashland",
+        acceptable_cities: "Garfield Plt, Masardis, Nashville Plt",
+        unacceptable_cities: null,
+        state: "ME",
+        county: "Aroostook County",
+        timezone: "America/New_York",
+        area_codes: "207",
+        latitude: "46.63",
+        longitude: "-68.4",
+        country: "US",
+        estimated_population: "1375"
+      }
+    ];
     expect.assertions(1);
-    await expect(handler(event)).rejects.toEqual(
-      Error("Unsupported HTTP Method: PATCH")
-    );
+    let response = await handler(event);
+    expect(response).toEqual(expectResult);
+  });
+  test("Provided Latitude and Longitude returns the single expected result", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        latitude: 46.84,
+        longitude: -67.94
+      }
+    };
+    let expectResult = [
+      {
+        zip: "04736",
+        type: "STANDARD",
+        primary_city: "Caribou",
+        acceptable_cities: "Connor Twp, Woodland",
+        unacceptable_cities: null,
+        state: "ME",
+        county: "Aroostook County",
+        timezone: "America/New_York",
+        area_codes: "207",
+        latitude: "46.86",
+        longitude: "-67.99",
+        country: "US",
+        estimated_population: "7868"
+      }
+    ];
+    expect.assertions(1);
+    let response = await handler(event);
+    expect(response).toEqual(expectResult);
+  });
+  test("Unacceptable city is filtered out of results", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        zipcode: "0473",
+        city: "ASHLAND"
+      }
+    };
+    let expectResult = [
+      {
+        "zip": "04732",
+        "type": "STANDARD",
+        "primary_city": "Ashland",
+        "acceptable_cities": "Garfield Plt, Masardis, Nashville Plt",
+        "unacceptable_cities": null,
+        "state": "ME",
+        "county": "Aroostook County",
+        "timezone": "America/New_York",
+        "area_codes": "207",
+        "latitude": "46.63",
+        "longitude": "-68.4",
+        "country": "US",
+        "estimated_population": "1375"
+      }
+    ];
+    expect.assertions(1);
+    let response = await handler(event);
+    expect(response).toEqual(expectResult);
   });
 });

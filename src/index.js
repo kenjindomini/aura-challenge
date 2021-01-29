@@ -1,3 +1,6 @@
+import LatLon from "geodesy/latlon-spherical.js";
+
+// Load the zipcode database in to memory, to scale move to a proper external queryable database
 let db = require("./data");
 
 // lambda-like handler function
@@ -11,28 +14,17 @@ module.exports.handler = async event => {
   } catch (e) {
     throw new Error("Malformed request");
   }
-  switch (resource) {
-    case "zipcodes": {
-      return await zipcodesHandler(
-        event.httpMethod,
-        event.headers,
-        resourceArguments,
-        event.queryStringParameters,
-        event.body
-      );
-    }
-    case "zipcode": {
-      return await zipcodeHandler(
-        event.httpMethod,
-        event.headers,
-        resourceArguments,
-        event.queryStringParameters,
-        event.body
-      );
-    }
-    default: {
-      throw new Error(`Unknown path: ${event.path}`);
-    }
+  if (resource === "zipcodes") {
+    return await zipcodesHandler(
+      event.httpMethod,
+      event.headers,
+      resourceArguments,
+      event.queryStringParameters,
+      event.body
+    );
+  }
+  else {
+    throw new Error(`Unknown path: ${event.path}`);
   }
 };
 
@@ -53,33 +45,68 @@ async function zipcodesHandler(
   }
 }
 
-async function zipcodeHandler(
-  method,
-  headers,
-  resourceArguments,
-  queryString,
-  body
-) {
-  switch (method) {
-    case "GET": {
-      throw new Error(`GET /zipcode not implemented`);
-    }
-    case "POST": {
-      throw new Error(`POST /zipcode not implemented`);
-    }
-    default: {
-      throw new Error(`Unsupported HTTP Method: ${method}`);
-    }
-  }
-}
-
 function getZipcodes(queryString) {
-  let zipcodes = db;
+  let zips = db;
+  // If latitude and longitude are provided we only return the closest zip so there is no reason to continue
+  // filtering just return the result
+  if (
+    queryString.hasOwnProperty("latitude") &&
+    queryString.hasOwnProperty("longitude")
+  ) {
+    let closestZip;
+    let shortestDisatance = undefined;
+    zips.some(z => {
+      if (
+        queryString.latitude === z.latitude &&
+        queryString.longitude === z.longitude
+      ) {
+        // short circuit if coords are equal
+        closestZip = z;
+        return true;
+      }
+      let p1 = new LatLon(queryString.latitude, queryString.longitude);
+      let p2 = new LatLon(z.latitude, z.longitude);
+      let d = p1.distanceTo(p2);
+      if (shortestDisatance === undefined) {
+        shortestDisatance = d;
+        closestZip = z;
+      } else if (d < shortestDisatance) {
+        shortestDisatance = d;
+        closestZip = z;
+      }
+      // This function could be optimized by identifying the actual floor;
+      // finding the two closest zips and identifying the midpoint.
+    });
+    return [closestZip];
+  }
   if (queryString.hasOwnProperty("type")) {
-    zipcodes = zipcodes.filter(z => z.type === queryString.type);
+    zips = zips.filter(z => z.type === queryString.type);
   }
   if (queryString.hasOwnProperty("zipcode")) {
-    zipcodes = zipcodes.filter(z => z.zip.match(`.*${queryString.zipcode}.*`));
+    zips = zips.filter(z => z.zip.includes(queryString.zipcode));
   }
-  return zipcodes;
+  if (queryString.hasOwnProperty("city")) {
+    let city = queryString.city.toLowerCase();
+    zips = zips.filter(z => {
+      let primaryCityMatches = z.primary_city.toLowerCase().includes(city);
+      let acceptableCityMatches = false;
+      if (z.acceptable_cities !== null) {
+        acceptableCityMatches = z.acceptable_cities
+          .toLowerCase()
+          .includes(city);
+      }
+      let unacceptableCityMatches = false;
+      if (z.unacceptable_cities !== null) {
+        unacceptableCityMatches = z.unacceptable_cities
+          .toLowerCase()
+          .split(", ")
+          .includes(city);
+      }
+      return (
+        (primaryCityMatches || acceptableCityMatches) &&
+        !unacceptableCityMatches
+      );
+    });
+  }
+  return zips;
 }
