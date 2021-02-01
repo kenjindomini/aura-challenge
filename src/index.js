@@ -10,31 +10,21 @@ module.exports.handler = async event => {
   try {
     let matches = event.path.match(re);
     resource = matches[1];
-    resourceArguments = matches[2];
   } catch (e) {
     throw new Error("Malformed request");
   }
   if (resource === "zipcodes") {
-    return await zipcodesHandler(
+    return zipcodesHandler(
       event.httpMethod,
       event.headers,
-      resourceArguments,
-      event.queryStringParameters,
-      event.body
+      event.queryStringParameters
     );
-  }
-  else {
+  } else {
     throw new Error(`Unknown path: ${event.path}`);
   }
 };
 
-async function zipcodesHandler(
-  method,
-  headers,
-  resourceArguments,
-  queryString,
-  body
-) {
+function zipcodesHandler(method, headers, queryString) {
   switch (method) {
     case "GET": {
       return getZipcodes(queryString);
@@ -46,6 +36,7 @@ async function zipcodesHandler(
 }
 
 function getZipcodes(queryString) {
+  queryString = getZipcodesValidation(queryString);
   let zips = db;
   // If latitude and longitude are provided we only return the closest zip so there is no reason to continue
   // filtering just return the result
@@ -109,4 +100,82 @@ function getZipcodes(queryString) {
     });
   }
   return zips;
+}
+
+/***
+ * getZipcodesValidation will return a new querystring object with coerced values or throw a validation error
+ * @param queryString - querystring object received from the API Gateway event
+ *
+ * @returns queryString - modified copy of queryString object
+ */
+function getZipcodesValidation(queryString) {
+  if (
+    queryString.hasOwnProperty("latitude") ||
+    queryString.hasOwnProperty("longitude")
+  ) {
+    if (
+      queryString.hasOwnProperty("latitude") === false ||
+      queryString.hasOwnProperty("longitude") === false
+    ) {
+      throw new Error("latitude and longitude require each other");
+    }
+    queryString.latitude = Number(queryString.latitude);
+    queryString.longitude = Number(queryString.longitude);
+    if (isNaN(queryString.latitude)) {
+      throw new Error(
+        "latitude must be a number representing degrees; minute and second notation is not supported"
+      );
+    }
+    if (isNaN(queryString.longitude)) {
+      throw new Error(
+        "longitude must be a number representing degrees; minute and second notation is not supported"
+      );
+    }
+  }
+
+  if (queryString.hasOwnProperty("zipcode")) {
+    let re = new RegExp("^\\d{1,5}$");
+    let matches;
+    try {
+      matches = queryString.zipcode.match(re);
+    } catch (e) {
+      matches = null;
+    }
+    if (matches === null) {
+      throw new Error("zipcode must be a string of 1-5 digits");
+    }
+  }
+
+  if (queryString.hasOwnProperty("city")) {
+    let re = new RegExp("^[a-zA-Z -]+$");
+    let matches;
+    try {
+      matches = queryString.city.match(re);
+    } catch (e) {
+      matches = null;
+    }
+    if (matches === null) {
+      throw new Error(
+        "city must be a string with only letters, spaces, and dashes"
+      );
+    }
+  }
+
+  if (queryString.hasOwnProperty("type")) {
+    queryString.type = queryString.type.toUpperCase();
+    let re = new RegExp("^STANDARD$|^PO BOX$|^UNIQUE$");
+    let matches;
+    try {
+      matches = queryString.type.match(re);
+    } catch (e) {
+      matches = null;
+    }
+    if (matches === null) {
+      throw new Error(
+        "type must be a string with a value one of STANDARD, PO BOX, UNIQUE"
+      );
+    }
+  }
+
+  return queryString;
 }
