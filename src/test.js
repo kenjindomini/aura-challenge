@@ -95,7 +95,7 @@ describe("/zipcodes tests", () => {
       path: "/zipcodes",
       headers: {},
       queryStringParameters: {
-        zipcode: 701
+        zipcode: "701"
       }
     };
     let expectResult = [
@@ -156,7 +156,7 @@ describe("/zipcodes tests", () => {
       path: "/zipcodes",
       headers: {},
       queryStringParameters: {
-        zipcode: 701,
+        zipcode: "701",
         type: "UNIQUE"
       }
     };
@@ -284,19 +284,156 @@ describe("/zipcodes tests", () => {
     };
     let expectResult = [
       {
-        "zip": "04732",
-        "type": "STANDARD",
-        "primary_city": "Ashland",
-        "acceptable_cities": "Garfield Plt, Masardis, Nashville Plt",
-        "unacceptable_cities": null,
-        "state": "ME",
-        "county": "Aroostook County",
-        "timezone": "America/New_York",
-        "area_codes": "207",
-        "latitude": "46.63",
-        "longitude": "-68.4",
-        "country": "US",
-        "estimated_population": "1375"
+        zip: "04732",
+        type: "STANDARD",
+        primary_city: "Ashland",
+        acceptable_cities: "Garfield Plt, Masardis, Nashville Plt",
+        unacceptable_cities: null,
+        state: "ME",
+        county: "Aroostook County",
+        timezone: "America/New_York",
+        area_codes: "207",
+        latitude: "46.63",
+        longitude: "-68.4",
+        country: "US",
+        estimated_population: "1375"
+      }
+    ];
+    expect.assertions(1);
+    let response = await handler(event);
+    expect(response).toEqual(expectResult);
+  });
+  test("Validation of zipcode does not allow non-numeric characters", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        zipcode: "0473Z"
+      }
+    };
+    expect.assertions(1);
+    await expect(handler(event)).rejects.toEqual(
+      Error("zipcode must be a string of 1-5 digits")
+    );
+  });
+  test("Validation of latitude requires longitude", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        latitude: "24.6"
+      }
+    };
+    expect.assertions(1);
+    await expect(handler(event)).rejects.toEqual(
+      Error("latitude and longitude require each other")
+    );
+  });
+  test("Validation of longitude requires latitude", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        longitude: "24.6"
+      }
+    };
+    expect.assertions(1);
+    await expect(handler(event)).rejects.toEqual(
+      Error("latitude and longitude require each other")
+    );
+  });
+  test("Validation of longitude requires a number", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        longitude: "24 6' 9\"",
+        latitude: "25.1"
+      }
+    };
+    expect.assertions(1);
+    await expect(handler(event)).rejects.toEqual(
+      Error(
+        "longitude must be a number representing degrees; minute and second notation is not supported"
+      )
+    );
+  });
+  test("Validation of latitude requires a number", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        latitude: "24 6' 9\"",
+        longitude: "25.1"
+      }
+    };
+    expect.assertions(1);
+    await expect(handler(event)).rejects.toEqual(
+      Error(
+        "latitude must be a number representing degrees; minute and second notation is not supported"
+      )
+    );
+  });
+  test("Validation of city requires a string with only letters, spaces, and dashes", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        city: "New_dracut"
+      }
+    };
+    expect.assertions(1);
+    await expect(handler(event)).rejects.toEqual(
+      Error("city must be a string with only letters, spaces, and dashes")
+    );
+  });
+  test("Validation of type requires a string matching STANDARD, PO BOX, or UNIQUE", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        type: "StandardPO BOX"
+      }
+    };
+    expect.assertions(1);
+    await expect(handler(event)).rejects.toEqual(
+      Error(
+        "type must be a string with a value one of STANDARD, PO BOX, UNIQUE"
+      )
+    );
+  });
+  test("type is not case sensitive", async () => {
+    let event = {
+      httpMethod: "GET",
+      path: "/zipcodes",
+      headers: {},
+      queryStringParameters: {
+        zipcode: "701",
+        type: "Unique"
+      }
+    };
+    let expectResult = [
+      {
+        zip: "06701",
+        type: "UNIQUE",
+        primary_city: "Waterbury",
+        acceptable_cities: null,
+        unacceptable_cities: "U S Postal Service, Wtby",
+        state: "CT",
+        county: "New Haven County",
+        timezone: "America/New_York",
+        area_codes: "203",
+        latitude: "41.55",
+        longitude: "-73.03",
+        country: "US",
+        estimated_population: "0"
       }
     ];
     expect.assertions(1);
